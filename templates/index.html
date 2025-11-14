@@ -1,11 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="dashboard">
-    <h1>Welcome to VPScope</h1>
-    <p>Your powerful VPS management dashboard.</p>
+    <h1>VPS Dashboard</h1>
+    <div class="dashboard-widgets">
+        <div class="widget">
+            <h3>CPU Usage</h3>
+            <div class="progress-bar">
+                <div id="cpu-bar" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="cpu-value">Loading...</p>
+        </div>
+        <div class="widget">
+            <h3>RAM Usage</h3>
+            <div class="progress-bar">
+                <div id="ram-bar" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="ram-value">Loading...</p>
+        </div>
+        <div class="widget">
+            <h3>Disk Usage</h3>
+            <div class="progress-bar">
+                <div id="disk-bar" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="disk-value">Loading...</p>
+        </div>
+        <div class="widget">
+            <h3>Uptime</h3>
+            <p id="uptime">Loading...</p>
+        </div>
+        <div class="widget">
+            <h3>Processes</h3>
+            <p id="processes-count">Loading...</p>
+        </div>
+        <div class="widget">
+            <h3>Network</h3>
+            <p id="net-sent">Sent: 0 B/s</p>
+            <p id="net-recv">Recv: 0 B/s</p>
+        </div>
+    </div>
     <div class="quick-links">
         <a href="/system" class="card">
             <img src="{{ url_for('static', filename='icons/cpu.svg') }}" alt="System">
@@ -21,4 +56,37 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обновление дашборда
+    function updateDashboard() {
+        fetch('/system/metrics')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('cpu-value').textContent = `${data.total_cpu_processes.toFixed(1)}%`;
+                document.getElementById('cpu-bar').style.width = `${data.total_cpu_processes}%`;
+                document.getElementById('ram-value').textContent = `${data.ram_percent.toFixed(1)}%`;
+                document.getElementById('ram-bar').style.width = `${data.ram_percent}%`;
+                document.getElementById('disk-value').textContent = `${data.disk_percent.toFixed(1)}%`;
+                document.getElementById('disk-bar').style.width = `${data.disk_percent}%`;
+                document.getElementById('processes-count').textContent = data.processes.length;
+                document.getElementById('uptime').textContent = formatUptime(data.uptime_seconds);
+            })
+            .catch(error => console.error('Error fetching dashboard metrics:', error));
+    }
+
+    function formatUptime(seconds) {
+        const days = Math.floor(seconds / (3600 * 24));
+        const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return `${days}d ${hours}h ${minutes}m`;
+    }
+
+    updateDashboard();
+    setInterval(updateDashboard, 2000);
+});
+</script>
 {% endblock %}
