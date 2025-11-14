@@ -38,7 +38,7 @@ def get_summary_metrics():
                 'percent': usage.percent
             })
         except:
-            continue  # Игнорировать диски, к которым нет доступа
+            continue
 
     # Network
     net = psutil.net_io_counters()
@@ -58,12 +58,25 @@ def get_summary_metrics():
     processes = []
     for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
         try:
-            processes.append(proc.info)
+            info = proc.info
+            # Пропускаем System Idle Process
+            if info['name'] == 'System Idle Process':
+                continue
+            processes.append(info)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
 
     # Сортируем по CPU
     processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
+
+    # Нормализуем CPU % процессов, чтобы сумма не превышала 100%
+    total_cpu = sum(p['cpu_percent'] for p in processes)
+    if total_cpu > 100:
+        for proc in processes:
+            proc['cpu_percent'] = (proc['cpu_percent'] / total_cpu) * 100
+
+    # Добавляем сумму CPU процессов в метрики
+    total_cpu_processes = sum(p['cpu_percent'] for p in processes)
 
     # Temperature (если доступна)
     temps = {}
@@ -97,10 +110,11 @@ def get_summary_metrics():
         'boot_time': boot_time.isoformat(),
         'uptime_seconds': int(uptime_seconds),
         'load_avg': load_avg,
-        'processes': processes[:20],  # Только первые 20 процессов
+        'processes': processes[:20],
         'temperatures': temps,
         'os': platform.system(),
         'hostname': platform.node(),
         'machine': platform.machine(),
-        'version': platform.version()
+        'version': platform.version(),
+        'total_cpu_processes': total_cpu_processes  # ← Добавлено
     }

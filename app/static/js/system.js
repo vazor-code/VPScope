@@ -29,12 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('systemChart').getContext('2d');
     const chart = new Chart(ctx, {
         type: 'line',
-        data: {  // ← Добавлено 'data:'
+        data: {
             labels: Array(10).fill(''),
             datasets: [
                 {
-                    label: 'CPU %',
-                    data: Array(10).fill(0),  // ← Исправлено
+                    label: 'CPU % (Processes)',
+                    data: Array(10).fill(0),
                     borderColor: '#ff6b6b',
                     tension: 0.1
                 },
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 {
                     label: 'Disk %',
-                    data: Array(10).fill(0),  // ← Исправлено
+                    data: Array(10).fill(0),
                     borderColor: '#ffa502',
                     tension: 0.1
                 }
@@ -92,12 +92,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 // Обновляем основные метрики
-                cpuValue.textContent = `${data.cpu_percent.toFixed(1)}%`;
+                cpuValue.textContent = `${data.total_cpu_processes.toFixed(1)}%`;  // ← Исправлено
                 ramValue.textContent = `${data.ram_percent.toFixed(1)}%`;
                 diskValue.textContent = `${data.disk_percent.toFixed(1)}%`;
 
                 // Обновляем прогресс-бары
-                cpuBar.style.width = `${data.cpu_percent}%`;
+                cpuBar.style.width = `${data.total_cpu_processes}%`;  // ← Исправлено
                 ramBar.style.width = `${data.ram_percent}%`;
                 diskBar.style.width = `${data.disk_percent}%`;
 
@@ -169,8 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     tempDisplay.textContent = 'N/A';
                 }
 
-                // Обновляем график
-                chart.data.datasets[0].data.push(data.cpu_percent);
+                // Обновляем график — используем сумму CPU процессов
+                chart.data.datasets[0].data.push(data.total_cpu_processes);  // ← Здесь!
                 chart.data.datasets[1].data.push(data.ram_percent);
                 chart.data.datasets[2].data.push(data.disk_percent);
 
