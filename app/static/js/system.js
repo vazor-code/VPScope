@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const diskTotal = document.getElementById('disk-total');
     const uptime = document.getElementById('uptime');
     const processesList = document.getElementById('processes-list');
+    const processSearch = document.getElementById('process-search');  // ← Добавлено
     const disksList = document.getElementById('disks-list');
     const netSent = document.getElementById('net-sent');
     const netRecv = document.getElementById('net-recv');
@@ -87,6 +88,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${days}d ${hours}h ${minutes}m`;
     }
 
+    // Фильтрация процессов по названию
+    function filterProcesses(searchTerm) {
+        processSearchValue = searchTerm; // Сохраняем значение
+        const rows = processesList.getElementsByTagName('tr');
+        for (let row of rows) {
+            const nameCell = row.cells[1]; // Вторая колонка — Name
+            if (nameCell && nameCell.textContent.toLowerCase().includes(searchTerm.toLowerCase())) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+
     function fetchMetrics() {
         fetch('/system/metrics')
             .then(response => response.json())
@@ -123,6 +138,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                         processesList.appendChild(row);
                     });
+                    // Применяем фильтр после обновления
+                    if (processSearchValue) {
+                        filterProcesses(processSearchValue);
+                    }
                 }
 
                 // Обновляем диски
@@ -170,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Обновляем график — используем сумму CPU процессов
-                chart.data.datasets[0].data.push(data.total_cpu_processes);  // ← Здесь!
+                chart.data.datasets[0].data.push(data.total_cpu_processes);
                 chart.data.datasets[1].data.push(data.ram_percent);
                 chart.data.datasets[2].data.push(data.disk_percent);
 
@@ -187,6 +206,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error fetching metrics:', error);
             });
+    }
+
+    // Обработчик ввода в поле поиска
+    if (processSearch) {
+        processSearch.addEventListener('input', (e) => {
+            filterProcesses(e.target.value);
+        });
     }
 
     fetchMetrics();
