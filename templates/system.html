@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}System Metrics{% endblock %}
+
+{% block content %}
+<div class="system-metrics">
+    <h1>System Metrics</h1>
+
+    <div class="metric-cards">
+        <div class="metric-card">
+            <img src="{{ url_for('static', filename='icons/cpu.svg') }}" alt="CPU">
+            <div class="metric-info">
+                <h3>CPU Usage</h3>
+                <div class="progress-bar">
+                    <div id="cpu-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p id="cpu-value">Loading...</p>
+                <p>Cores: <span id="cpu-count">-</span></p>
+                <p>Freq: <span id="cpu-freq">-</span></p>
+            </div>
+        </div>
+        <div class="metric-card">
+            <img src="{{ url_for('static', filename='icons/ram.svg') }}" alt="RAM">
+            <div class="metric-info">
+                <h3>RAM Usage</h3>
+                <div class="progress-bar">
+                    <div id="ram-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p id="ram-value">Loading...</p>
+                <p>Used: <span id="ram-used">-</span></p>
+                <p>Total: <span id="ram-total">-</span></p>
+            </div>
+        </div>
+        <div class="metric-card">
+            <img src="{{ url_for('static', filename='icons/disk.svg') }}" alt="Disk">
+            <div class="metric-info">
+                <h3>Disk Usage</h3>
+                <div class="progress-bar">
+                    <div id="disk-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p id="disk-value">Loading...</p>
+                <p>Used: <span id="disk-used">-</span></p>
+                <p>Total: <span id="disk-total">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="additional-info">
+        <p>Uptime: <span id="uptime">-</span></p>
+        <p>Network Sent: <span id="net-sent">-</span></p>
+        <p>Network Received: <span id="net-recv">-</span></p>
+        <p>Temperature: <span id="temperature">-</span></p>
+    </div>
+
+    <div class="table-container">
+        <h3>Processes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>CPU %</th>
+                    <th>Memory %</th>
+                </tr>
+            </thead>
+            <tbody id="processes-list">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <h3>Disks</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Mountpoint</th>
+                    <th>Used</th>
+                    <th>Total</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody id="disks-list">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="systemChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/system.js') }}"></script>
+{% endblock %}
