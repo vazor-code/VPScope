@@ -1,59 +1,56 @@
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request, send_from_directory
+from app.utils.file_utils import list_dir, save_upload, delete_file, make_dir
 import os
-from werkzeug.utils import secure_filename
 
-files_bp = Blueprint('files', __name__, template_folder='templates')
-
-def list_dir(path):
-    entries = []
-    for e in os.scandir(path):
-        entries.append({'name': e.name, 'is_dir': e.is_dir(), 'path': os.path.abspath(e.path)})
-    return {'path': os.path.abspath(path), 'entries': entries}
+files_bp = Blueprint('files', __name__)
 
 @files_bp.route('/')
 def index():
-    return "<h1>File Explorer</h1>"
+    return "<h1>File Manager API</h1>"
 
-@files_bp.route('/list')
-def list_files_route():
+@files_bp.route('/list', methods=['GET'])
+def list_directory():
     path = request.args.get('path', '.')
-    path = os.path.abspath(path)
-    if not os.path.exists(path) or not os.path.isdir(path):
-        return jsonify({'error': 'invalid path'}), 400
-    return jsonify(list_dir(path))
+    try:
+        return jsonify(list_dir(path))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @files_bp.route('/upload', methods=['POST'])
-def upload():
-    target = request.form.get('path', '.')
-    file_storage = request.files.get('file')
-    if not file_storage:
-        return jsonify({'error':'No file'}), 400
-    target = os.path.abspath(target)
-    os.makedirs(target, exist_ok=True)
-    filename = secure_filename(file_storage.filename)
-    file_storage.save(os.path.join(target, filename))
-    return jsonify({'ok': True})
-
-@files_bp.route('/download')
-def download():
-    path = request.args.get('path')
-    path = os.path.abspath(path)
-    if not os.path.isfile(path):
-        return jsonify({'error':'not found'}),404
-    return send_file(path, as_attachment=True)
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    try:
+        save_upload(file, request.form.get('path', '.'))
+        return jsonify({'message': 'File uploaded successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @files_bp.route('/delete', methods=['POST'])
-def delete():
-    data = request.get_json(silent=True) or {}
-    path = data.get('path')
-    if not path: return jsonify({'error':'path required'}),400
-    path = os.path.abspath(path)
-    if not os.path.exists(path): return jsonify({'error':'not found'}),404
+def delete_item():
+    path = request.json.get('path')
+    if not path:
+        return jsonify({'error': 'Path is required'}), 400
     try:
-        if os.path.isdir(path):
-            os.rmdir(path)
-        else:
-            os.remove(path)
+        delete_file(path)
+        return jsonify({'message': 'Item deleted successfully'})
     except Exception as e:
-        return jsonify({'error':str(e)}),500
-    return jsonify({'deleted': True})
+        return jsonify({'error': str(e)}), 500
+
+@files_bp.route('/mkdir', methods=['POST'])
+def create_directory():
+    path = request.json.get('path')
+    if not path:
+        return jsonify({'error': 'Path is required'}), 400
+    try:
+        make_dir(path)
+        return jsonify({'message': 'Directory created successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@files_bp.route('/download/<path:filename>')
+def download_file(filename):
+    return send_from_directory('.', filename, as_attachment=True)

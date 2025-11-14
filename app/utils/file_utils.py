@@ -5,13 +5,15 @@ def list_dir(path='.'):
     entries = []
     for name in os.listdir(path):
         full = os.path.join(path, name)
+        is_dir = os.path.isdir(full)
         entries.append({
             'name': name,
             'path': full,
-            'is_dir': os.path.isdir(full),
-            'size': os.path.getsize(full) if os.path.isfile(full) else None
+            'is_dir': is_dir,
+            'size': os.path.getsize(full) if not is_dir else None
         })
-    return {'path': path, 'entries': entries}
+    entries.sort(key=lambda x: (not x['is_dir'], x['name']))
+    return {'path': os.path.abspath(path), 'entries': entries}
 
 def save_upload(file_storage, target_path='.'):
     filename = secure_filename(file_storage.filename)

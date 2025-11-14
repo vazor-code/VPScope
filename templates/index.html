@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Welcome to VPScope</h1>
+    <p>Your powerful VPS management dashboard.</p>
+    <div class="quick-links">
+        <a href="/system" class="card">
+            <img src="{{ url_for('static', filename='icons/cpu.svg') }}" alt="System">
+            <span>System Metrics</span>
+        </a>
+        <a href="/files" class="card">
+            <img src="{{ url_for('static', filename='icons/disk.svg') }}" alt="Files">
+            <span>File Manager</span>
+        </a>
+        <a href="/terminal" class="card">
+            <img src="{{ url_for('static', filename='icons/terminal.svg') }}" alt="Terminal">
+            <span>Terminal</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
