@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, send_from_directory, send_file
 from app.utils.file_utils import list_dir, save_upload, delete_file, make_dir
 from app import socketio  # Импортируем socketio из __init__.py
 import os
+from urllib.parse import unquote
 
 files_bp = Blueprint('files', __name__)
 
@@ -37,6 +38,8 @@ def index():
 def list_directory():
     path = request.args.get('path', '.')
     try:
+        # Декодируем URL-encoded путь
+        path = unquote(path)
         # Нормализуем путь
         normalized_path = normalize_path(path)
         result = list_dir(normalized_path)
@@ -57,6 +60,8 @@ def upload_file():
     
     try:
         path = request.form.get('path', '.')
+        # Декодируем URL-encoded путь
+        path = unquote(path)
         # Нормализуем путь
         path = normalize_path(path)
         

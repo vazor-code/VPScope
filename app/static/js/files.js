@@ -414,19 +414,28 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/files/list?path=${encodeURIComponent(path)}`)
             .then(response => response.json())
             .then(data => {
+                if (data.error) {
+                    console.error('API Error:', data.error);
+                    alert('Error loading directory: ' + data.error);
+                    return;
+                }
+
+                // Ensure data.entries is an array
+                data.entries = data.entries || [];
+
                 currentPathDiv.textContent = data.path;
-                currentPath = data.path;
-                
+                currentPath = data.path.replace(/\\/g, '/'); // Normalize to forward slashes for JS
+
                 // Показываем доступные диски
                 if (data.drives) {
-                    drivesContainer.innerHTML = '<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">' + 
-                        data.drives.map(drive => 
+                    drivesContainer.innerHTML = '<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">' +
+                        data.drives.map(drive =>
                             `<button class="drive-btn" data-drive="${drive}" style="
-                                padding: 0.25rem 0.5rem; 
-                                background-color: ${drive === currentPath.substring(0, 2) ? '#e74c3c' : '#3498db'}; 
-                                color: white; 
-                                border: none; 
-                                border-radius: 4px; 
+                                padding: 0.25rem 0.5rem;
+                                background-color: ${drive === currentPath.substring(0, 2) ? '#e74c3c' : '#3498db'};
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
                                 cursor: pointer;
                                 transition: var(--transition);
                             ">${drive}</button>`
@@ -441,9 +450,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     });
                 }
-                
+
                 fileList.innerHTML = '';
-                
+
                 // Создаем заголовок списка
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'file-list-header';
@@ -456,8 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 fileList.appendChild(headerDiv);
-                
+
                 data.entries.forEach(entry => {
+                    entry.path = entry.path.replace(/\\/g, '/'); // Normalize paths
                     const itemDiv = document.createElement('div');
                     itemDiv.className = `file-item ${entry.is_dir ? 'directory' : 'file'}`;
                     
@@ -491,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fileList.appendChild(itemDiv);
 
                     // Обработчик клика на элемент (для перехода в папку или открытия файла)
-                    itemDiv.querySelector('.file-name').addEventListener('click', () => {
+                    itemDiv.addEventListener('click', () => {
                         showPreview(entry.path, entry.name, entry.is_dir);
                     });
 
