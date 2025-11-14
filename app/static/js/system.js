@@ -29,12 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('systemChart').getContext('2d');
     const chart = new Chart(ctx, {
         type: 'line',
-         {
+        data: {  // ← Добавлено 'data:'
             labels: Array(10).fill(''),
             datasets: [
                 {
                     label: 'CPU %',
-                     Array(10).fill(0),
+                    data: Array(10).fill(0),  // ← Исправлено
                     borderColor: '#ff6b6b',
                     tension: 0.1
                 },
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 {
                     label: 'Disk %',
-                     Array(10).fill(0),
+                    data: Array(10).fill(0),  // ← Исправлено
                     borderColor: '#ffa502',
                     tension: 0.1
                 }
