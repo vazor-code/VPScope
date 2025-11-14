@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}File Manager{% endblock %}
+
+{% block content %}
+<div class="file-manager">
+    <h1>File Manager</h1>
+    <div class="controls">
+        <button id="upload-btn">Upload File</button>
+        <input type="file" id="file-input" style="display: none;" multiple>
+        <input type="text" id="new-item-name" placeholder="File or folder name">
+        <button id="create-item-btn">Create</button>
+    </div>
+    <div id="drives-container"></div>
+    <div id="current-path">/</div>
+    <div id="file-list"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/files.js') }}"></script>
+{% endblock %}
