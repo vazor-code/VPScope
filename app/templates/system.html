@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>System Metrics</h2>
+<div class="charts">
+    <canvas id="cpuChart" height="100"></canvas>
+    <canvas id="ramChart" height="100"></canvas>
+    <canvas id="diskChart" height="100"></canvas>
+</div>
+
+<script>
+async function getMetrics() {
+    const res = await fetch('/system/metrics');
+    return await res.json();
+}
+
+const cpuChart = new Chart(document.getElementById('cpuChart').getContext('2d'), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:'CPU %', data:[], borderColor:'#FF4C4C', fill:false}] },
+    options:{animation:false,responsive:true}
+});
+const ramChart = new Chart(document.getElementById('ramChart').getContext('2d'), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:'RAM %', data:[], borderColor:'#4C9BFF', fill:false}] },
+    options:{animation:false,responsive:true}
+});
+const diskChart = new Chart(document.getElementById('diskChart').getContext('2d'), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:'Disk %', data:[], borderColor:'#4CFF88', fill:false}] },
+    options:{animation:false,responsive:true}
+});
+
+function updateCharts(metrics){
+    const time = new Date().toLocaleTimeString();
+    [cpuChart, ramChart, diskChart].forEach(chart=>{
+        if(chart.data.labels.length>20){
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
+    });
+    cpuChart.data.labels.push(time); cpuChart.data.datasets[0].data.push(metrics.cpu_percent);
+    ramChart.data.labels.push(time); ramChart.data.datasets[0].data.push(metrics.ram_percent);
+    diskChart.data.labels.push(time); diskChart.data.datasets[0].data.push(metrics.disk_percent);
+    cpuChart.update(); ramChart.update(); diskChart.update();
+}
+
+setInterval(async ()=>updateCharts(await getMetrics()), 1000);
+</script>
+{% endblock %}

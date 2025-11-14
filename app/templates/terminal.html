@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Terminal</h2>
+<div id="terminal-output" class="terminal"></div>
+<input id="terminal-input" type="text" placeholder="Enter command">
+<button onclick="sendCommand()">Send</button>
+
+<script>
+const socket = io();
+const output = document.getElementById('terminal-output');
+
+function appendLine(text){
+    output.innerHTML += text + '<br>';
+    output.scrollTop = output.scrollHeight;
+}
+
+function sendCommand(){
+    const cmd = document.getElementById('terminal-input').value;
+    if(!cmd) return;
+    socket.emit('run_command',{command:cmd});
+    document.getElementById('terminal-input').value='';
+}
+
+socket.on('cmd_output', data=>{
+    if(data.output) appendLine(data.output);
+    if(data.exit!==undefined) appendLine(`Command finished with code ${data.exit}`);
+});
+</script>
+{% endblock %}
