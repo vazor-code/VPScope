@@ -7,10 +7,11 @@
     <h1>File Manager</h1>
     <div class="controls">
         <button id="upload-btn">Upload File</button>
-        <button id="mkdir-btn">Create Directory</button>
         <input type="file" id="file-input" style="display: none;" multiple>
-        <input type="text" id="new-dir-name" placeholder="Directory name">
+        <input type="text" id="new-item-name" placeholder="File or folder name">
+        <button id="create-item-btn">Create</button>
     </div>
+    <div id="drives-container"></div>
     <div id="current-path">/</div>
     <div id="file-list"></div>
 </div>
