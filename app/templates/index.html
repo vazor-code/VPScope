@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VPScope Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #121212;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 20px; font-weight: 300; }
+        .links { display: flex; gap: 20px; margin-bottom: 30px; }
+        a { text-decoration: none; color: #0f9d58; font-weight: bold; }
+        a:hover { color: #34a853; }
+        canvas { background: #1e1e1e; border-radius: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>VPScope Dashboard</h1>
+    <div class="links">
+        <a href="/files/">File Explorer</a>
+        <a href="/terminal/">Terminal</a>
+    </div>
+
+    <canvas id="cpuChart" width="400" height="100"></canvas>
+    <canvas id="ramChart" width="400" height="100"></canvas>
+    <canvas id="diskChart" width="400" height="100"></canvas>
+
+    <script>
+        const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        const ramCtx = document.getElementById('ramChart').getContext('2d');
+        const diskCtx = document.getElementById('diskChart').getContext('2d');
+
+        const cpuChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'CPU %', data: [], borderColor: '#f39c12', fill: false }] },
+            options: { scales: { y: { min: 0, max: 100 } } }
+        });
+        const ramChart = new Chart(ramCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'RAM %', data: [], borderColor: '#27ae60', fill: false }] },
+            options: { scales: { y: { min: 0, max: 100 } } }
+        });
+        const diskChart = new Chart(diskCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Disk %', data: [], borderColor: '#c0392b', fill: false }] },
+            options: { scales: { y: { min: 0, max: 100 } } }
+        });
+
+        function updateMetrics() {
+            fetch('/system/metrics')
+                .then(res => res.json())
+                .then(data => {
+                    const time = new Date().toLocaleTimeString();
+
+                    // CPU
+                    cpuChart.data.labels.push(time);
+                    cpuChart.data.datasets[0].data.push(data.cpu_percent);
+                    if (cpuChart.data.labels.length > 20) {
+                        cpuChart.data.labels.shift();
+                        cpuChart.data.datasets[0].data.shift();
+                    }
+                    cpuChart.update();
+
+                    // RAM
+                    ramChart.data.labels.push(time);
+                    ramChart.data.datasets[0].data.push(data.ram_percent);
+                    if (ramChart.data.labels.length > 20) {
+                        ramChart.data.labels.shift();
+                        ramChart.data.datasets[0].data.shift();
+                    }
+                    ramChart.update();
+
+                    // Disk
+                    diskChart.data.labels.push(time);
+                    diskChart.data.datasets[0].data.push(data.disk_percent);
+                    if (diskChart.data.labels.length > 20) {
+                        diskChart.data.labels.shift();
+                        diskChart.data.datasets[0].data.shift();
+                    }
+                    diskChart.update();
+                })
+                .catch(err => console.error('Failed to fetch metrics:', err));
+        }
+
+        // Обновляем каждые 2 секунды
+        setInterval(updateMetrics, 2000);
+        // первый запрос сразу
+        updateMetrics();
+    </script>
+</body>
+</html>
