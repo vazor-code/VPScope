@@ -93,6 +93,42 @@ def get_summary_metrics():
                         'critical': entry.critical
                     })
 
+    # Windows-specific WMI fallback for temperatures
+    if platform.system() == 'Windows':
+        try:
+            import wmi
+            c = wmi.WMI()
+            # Try Win32_TemperatureProbe
+            for probe in c.Win32_TemperatureProbe():
+                if probe.CurrentReading:
+                    # Convert from tenths Kelvin to Celsius (approximate)
+                    current = (int(probe.CurrentReading) / 10.0) - 273.15
+                    if 'TemperatureProbe' not in temps:
+                        temps['TemperatureProbe'] = []
+                    temps['TemperatureProbe'].append({
+                        'label': probe.Name or 'Probe',
+                        'current': round(current, 1),
+                        'high': probe.MaxReadable or None,
+                        'critical': probe.MinReadable or None  # Approximate
+                    })
+            # Try MSAcpi_ThermalZoneTemperature
+            for tz in c.MSAcpi_ThermalZoneTemperature():
+                if tz.CurrentTemperature:
+                    current = (int(tz.CurrentTemperature) / 10.0) - 273.15
+                    if 'ThermalZone' not in temps:
+                        temps['ThermalZone'] = []
+                    temps['ThermalZone'].append({
+                        'label': 'System Zone',
+                        'current': round(current, 1),
+                        'high': None,
+                        'critical': None
+                    })
+        except ImportError:
+            pass  # wmi not installed
+        except Exception as e:
+            # Silently fail if WMI query fails (common on some systems)
+            pass
+
     return {
         'cpu_percent': cpu_percent,
         'cpu_count': cpu_count,

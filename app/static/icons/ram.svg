@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Основной корпус -->
+  <rect x="10" y="24" width="44" height="16" fill="#1f2335" stroke="#7aa2f7" stroke-width="2" rx="4"/>
+  <!-- Контакты слева -->
+  <g stroke="#9ece6a" stroke-width="2">
+    <line x1="10" y1="26" x2="6" y2="26"/>
+    <line x1="10" y1="29" x2="6" y2="29"/>
+    <line x1="10" y1="32" x2="6" y2="32"/>
+    <line x1="10" y1="35" x2="6" y2="35"/>
+    <line x1="10" y1="38" x2="6" y2="38"/>
+  </g>
+  <!-- Контакты справа -->
+  <g stroke="#9ece6a" stroke-width="2">
+    <line x1="54" y1="26" x2="58" y2="26"/>
+    <line x1="54" y1="29" x2="58" y2="29"/>
+    <line x1="54" y1="32" x2="58" y2="32"/>
+    <line x1="54" y1="35" x2="58" y2="35"/>
+    <line x1="54" y1="38" x2="58" y2="38"/>
+  </g>
+  <!-- Логотип RAM -->
+  <text x="32" y="37" font-family="Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="#c0caf5">RAM</text>
+</svg>

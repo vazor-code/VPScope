@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Фон окна -->
+  <rect x="10" y="14" width="44" height="36" rx="6" fill="#0a0a0f" stroke="#7aa2f7" stroke-width="2"/>
+
+  <!-- Неоновое свечение (имитация glow) -->
+  <rect x="10" y="14" width="44" height="36" rx="6" fill="none" stroke="#7aa2f7" stroke-width="1" filter="url(#glow)"/>
+
+  <!-- Верхняя панель с кнопками -->
+  <rect x="10" y="14" width="44" height="6" fill="#1a1b26" stroke="#7aa2f7" stroke-opacity="0.3" stroke-width="1"/>
+  <circle cx="16" cy="17" r="1.5" fill="#f7768e"/> <!-- Закрыть -->
+  <circle cx="20" cy="17" r="1.5" fill="#e0af68"/> <!-- Свернуть -->
+  <circle cx="24" cy="17" r="1.5" fill="#9ece6a"/> <!-- Развернуть -->
+
+  <!-- Текст внутри терминала -->
+  <text x="18" y="28" font-family="JetBrains Mono, Fira Code, monospace" font-size="6" fill="#c0caf5">
+    <tspan x="18" dy="0">$ npm start</tspan>
+    <tspan x="18" dy="10">✓ Ready</tspan>
+  </text>
+
+  <!-- Курсор -->
+  <rect x="52" y="40" width="2" height="5" fill="#73daca"/>
+
+  <!-- Фильтр для неонового свечения -->
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>

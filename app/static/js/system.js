@@ -21,10 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const netRecv = document.getElementById('net-recv');
     const tempDisplay = document.getElementById('temperature');
 
+    let processSearchValue = '';  // Declare global for process search
+
     // Кэш для подсчёта сети
     let lastNetSent = 0;
     let lastNetRecv = 0;
-    let lastTime = Date.now();
+    let lastTime = 0; // Set to 0 initially to skip rate on first fetch
+    let firstFetch = true;
 
     // Создаем график
     const ctx = document.getElementById('systemChart').getContext('2d');
@@ -74,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function formatBytes(bytes) {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0 || isNaN(bytes)) return '0 Bytes/s';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -162,10 +165,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Обновляем сеть (в байтах/с)
                 const currentTime = Date.now();
-                const timeDiff = (currentTime - lastTime) / 1000; // в секундах
+                let sentRate = 0;
+                let recvRate = 0;
 
-                const sentRate = timeDiff > 0 ? (data.net_sent - lastNetSent) / timeDiff : 0;
-                const recvRate = timeDiff > 0 ? (data.net_recv - lastNetRecv) / timeDiff : 0;
+                if (!firstFetch) {
+                    const timeDiff = (currentTime - lastTime) / 1000; // в секундах
+                    if (timeDiff > 0) {
+                        sentRate = (data.net_sent - lastNetSent) / timeDiff;
+                        recvRate = (data.net_recv - lastNetRecv) / timeDiff;
+                    }
+                } else {
+                    firstFetch = false;
+                }
 
                 if (netSent) netSent.textContent = formatBytes(sentRate) + '/s';
                 if (netRecv) netRecv.textContent = formatBytes(recvRate) + '/s';
