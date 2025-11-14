@@ -47,7 +47,43 @@
 
     <div class="additional-info">
         <p>Uptime: <span id="uptime">-</span></p>
-        <p>Processes: <span id="processes-count">-</span></p>
+        <p>Network Sent: <span id="net-sent">-</span></p>
+        <p>Network Received: <span id="net-recv">-</span></p>
+        <p>Temperature: <span id="temperature">-</span></p>
+    </div>
+
+    <div class="table-container">
+        <h3>Processes</h3>
+        <input type="text" id="process-search" placeholder="Search processes..." style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 4px;"> <!-- ← Добавлено -->
+        <table>
+            <thead>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>CPU %</th>
+                    <th>Memory %</th>
+                </tr>
+            </thead>
+            <tbody id="processes-list">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <h3>Disks</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Mountpoint</th>
+                    <th>Used</th>
+                    <th>Total</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody id="disks-list">
+            </tbody>
+        </table>
     </div>
 
     <div class="chart-container">
