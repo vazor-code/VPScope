@@ -29,12 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('systemChart').getContext('2d');
     const chart = new Chart(ctx, {
         type: 'line',
-        data: {
+         {
             labels: Array(10).fill(''),
             datasets: [
                 {
                     label: 'CPU %',
-                    data: Array(10).fill(0),
+                     Array(10).fill(0),
                     borderColor: '#ff6b6b',
                     tension: 0.1
                 },
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 {
                     label: 'Disk %',
-                    data: Array(10).fill(0),
+                     Array(10).fill(0),
                     borderColor: '#ffa502',
                     tension: 0.1
                 }
@@ -85,10 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const hours = Math.floor((seconds % (3600 * 24)) / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         return `${days}d ${hours}h ${minutes}m`;
-    }
-
-    function showNotification(message) {
-        alert(message); // В реальном проекте можно использовать более красивые уведомления
     }
 
     function fetchMetrics() {
