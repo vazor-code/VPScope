@@ -1,30 +1,41 @@
 from flask import Flask
 from flask_socketio import SocketIO
+from flask_login import LoginManager
 
-# глобальный SocketIO для всех модулей
+# Глобальный SocketIO
 socketio = SocketIO(async_mode='threading')
 
+# Логин менеджер
+login_manager = LoginManager()
+
 def create_app():
-    app = Flask(__name__, template_folder="templates", static_folder="static")
-    app.config['SECRET_KEY'] = 'change-me'
+    app = Flask(__name__, template_folder="../templates", static_folder="static")
+    app.config['SECRET_KEY'] = 'your-super-secret-key-change-this'
+    app.config['LOGIN_VIEW'] = 'index.login'  # ← Это важно!
+    app.config['LOGIN_MESSAGE'] = "Please log in to access this page."
+    app.config['LOGIN_MESSAGE_CATEGORY'] = 'info'
 
-    # blueprints
-    from .routes.system import system_bp
-    from .routes.files import files_bp
-    from .routes.terminal import terminal_bp
-    from .routes.index import index_bp
+    # Инициализация LoginManager
+    login_manager.init_app(app)
+    login_manager.login_message = "Please log in to access this page."
 
+    # Регистрация blueprints
+    from app.routes.index import index_bp
+    from app.routes.system import system_bp
+    from app.routes.files import files_bp
+    from app.routes.terminal import terminal_bp
+
+    app.register_blueprint(index_bp)
     app.register_blueprint(system_bp, url_prefix='/system')
     app.register_blueprint(files_bp, url_prefix='/files')
     app.register_blueprint(terminal_bp, url_prefix='/terminal')
-    app.register_blueprint(index_bp, url_prefix='/')
 
     return app
 
 def run_server(host='0.0.0.0', port=8000):
     import logging, sys
 
-    # Логи
+    # Логирование
     logger = logging.getLogger('VPScope')
     if not logger.handlers:
         logger.setLevel(logging.INFO)
