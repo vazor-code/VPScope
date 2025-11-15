@@ -1,6 +1,8 @@
 from flask import Flask, redirect, url_for
 from flask_socketio import SocketIO
 from flask_login import LoginManager
+from flask_session import Session
+from flask_caching import Cache
 from datetime import timedelta
 import os
 from app.utils.logging_utils import setup_logger
@@ -11,17 +13,28 @@ socketio = SocketIO(async_mode='threading')
 # Login manager
 login_manager = LoginManager()
 
+# Global Cache
+cache = None
+
 def create_app():
     app = Flask(__name__, template_folder="../templates", static_folder="static")
-    app.config['SECRET_KEY'] = os.urandom(24).hex()
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'vpscope-dev-secret-key-change-in-prod')
     app.config['LOGIN_VIEW'] = 'index.login'  # Important!
     app.config['LOGIN_MESSAGE'] = "Please log in to access this page."
     app.config['LOGIN_MESSAGE_CATEGORY'] = 'info'
+    app.config['SESSION_TYPE'] = 'filesystem'
     app.config['SESSION_PERMANENT'] = True
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=31)
 
+    # Initialize Session
+    Session(app)
+
     # Initialize LoginManager
     login_manager.init_app(app)
+
+    # Initialize Cache
+    global cache
+    cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
     # Register blueprints
     from app.routes.index import index_bp

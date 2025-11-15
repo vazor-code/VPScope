@@ -1,11 +1,25 @@
 import psutil
 import platform
 import os
+import time
 from datetime import datetime
+from threading import Lock
+
+# Cache for metrics
+_metrics_cache = None
+_cache_timestamp = 0
+_cache_lock = Lock()
+_CACHE_TTL = 3  # seconds
 
 def get_summary_metrics():
-    # CPU
-    cpu_percent = psutil.cpu_percent(interval=1)
+    global _metrics_cache, _cache_timestamp
+    current_time = time.time()
+    with _cache_lock:
+        if _metrics_cache and (current_time - _cache_timestamp) < _CACHE_TTL:
+            return _metrics_cache
+
+    # CPU (non-blocking)
+    cpu_percent = psutil.cpu_percent(interval=None)
     cpu_count = psutil.cpu_count()
     cpu_freq = psutil.cpu_freq()
     cpu_freq_current = cpu_freq.current if cpu_freq else 0
@@ -17,13 +31,18 @@ def get_summary_metrics():
     ram_total = ram.total
     ram_percent = ram.percent
 
-    # Все диски first to find current drive
-    disk_parts = psutil.disk_partitions()
+    # All disks and summary using psutil if possible, fallback to WMI on Windows
     all_disks = []
-    current_drive = os.path.splitdrive(os.getcwd())[0] + '\\'  # e.g., 'D:\\'
     summary_disk = None
-    for part in disk_parts:
-        try:
+    current_drive_letter = os.path.splitdrive(os.getcwd())[0].upper()  # e.g., 'D:'
+    disk_used = 0
+    disk_total = 0
+    disk_percent = 0
+
+    psutil_success = False
+    try:
+        disk_parts = psutil.disk_partitions()
+        for part in disk_parts:
             usage = psutil.disk_usage(part.mountpoint)
             disk_info = {
                 'device': part.device,
@@ -35,11 +54,48 @@ def get_summary_metrics():
                 'percent': usage.percent
             }
             all_disks.append(disk_info)
-            # Check if this is the current drive
-            if part.device == current_drive or part.mountpoint == current_drive:
+            part_drive = os.path.splitdrive(part.mountpoint)[0].upper()
+            if part_drive == current_drive_letter:
                 summary_disk = disk_info
-        except:
-            continue
+        psutil_success = True
+    except:
+        pass
+
+    if not psutil_success or not summary_disk:
+        # Fallback to WMI on Windows
+        if platform.system() == 'Windows':
+            try:
+                import wmi
+                import pythoncom
+                pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
+                c = wmi.WMI()
+                # Get all fixed disks
+                logical_disks = c.Win32_LogicalDisk(DriveType=3)  # 3 = fixed disk
+                for disk in logical_disks:
+                    device = disk.DeviceID
+                    total = int(disk.Size) if disk.Size else 0
+                    free = int(disk.FreeSpace) if disk.FreeSpace else 0
+                    used = total - free
+                    percent = (used / total * 100) if total > 0 else 0
+                    fstype = disk.FileSystem or 'unknown'
+                    disk_info = {
+                        'device': device,
+                        'mountpoint': device,
+                        'fstype': fstype,
+                        'total': total,
+                        'used': used,
+                        'free': free,
+                        'percent': round(percent, 2)
+                    }
+                    all_disks.append(disk_info)
+                    if device == current_drive_letter:
+                        summary_disk = disk_info
+                pythoncom.CoUninitialize()
+            except ImportError:
+                pass  # Silent
+            except Exception as e:
+                # Silent fail for WMI
+                pass
 
     # Use summary_disk if found, else first disk or fallback
     if summary_disk:
@@ -69,54 +125,59 @@ def get_summary_metrics():
     if platform.system() != 'Windows':
         load_avg = psutil.getloadavg()
 
-    # Processes
+    # Processes (optimized: ad_value=0, limit to top 20)
     processes = []
-    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent'], ad_value=0):
         try:
             info = proc.info
-            # Пропускаем System Idle Process
-            if info['name'] == 'System Idle Process':
+            name = info.get('name', '')
+            if name == 'System Idle Process' or not name:
                 continue
             processes.append(info)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
-    # Сортируем по CPU
-    processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
+    # Sort by CPU and limit to top 20
+    processes.sort(key=lambda x: x.get('cpu_percent', 0), reverse=True)
+    processes = processes[:20]
 
-    # Нормализуем CPU % процессов, чтобы сумма не превышала 100%
-    total_cpu = sum(p['cpu_percent'] for p in processes)
+    # Normalize CPU % if needed
+    total_cpu = sum(p.get('cpu_percent', 0) for p in processes)
     if total_cpu > 100:
         for proc in processes:
-            proc['cpu_percent'] = (proc['cpu_percent'] / total_cpu) * 100
+            cpu_val = proc.get('cpu_percent', 0)
+            proc['cpu_percent'] = (cpu_val / total_cpu) * 100 if total_cpu > 0 else 0
 
-    # Добавляем сумму CPU процессов в метрики
-    total_cpu_processes = sum(p['cpu_percent'] for p in processes)
+    total_cpu_processes = sum(p.get('cpu_percent', 0) for p in processes)
 
-    # Temperature (если доступна)
+    # Temperatures (optimized with try-except)
     temps = {}
     if hasattr(psutil, "sensors_temperatures"):
-        temp_data = psutil.sensors_temperatures()
-        if temp_data:
-            for name, entries in temp_data.items():
-                temps[name] = []
-                for entry in entries:
-                    temps[name].append({
-                        'label': entry.label or name,
-                        'current': entry.current,
-                        'high': entry.high,
-                        'critical': entry.critical
-                    })
+        try:
+            temp_data = psutil.sensors_temperatures()
+            if temp_data:
+                for name, entries in temp_data.items():
+                    temps[name] = []
+                    for entry in entries:
+                        temps[name].append({
+                            'label': entry.label or name,
+                            'current': entry.current,
+                            'high': entry.high,
+                            'critical': entry.critical
+                        })
+        except:
+            pass
 
-    # Windows-specific WMI fallback for temperatures
-    if platform.system() == 'Windows':
+    # Windows-specific WMI fallback for temperatures (with init)
+    if platform.system() == 'Windows' and not temps:
         try:
             import wmi
+            import pythoncom
+            pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
             c = wmi.WMI()
             # Try Win32_TemperatureProbe
             for probe in c.Win32_TemperatureProbe():
                 if probe.CurrentReading:
-                    # Convert from tenths Kelvin to Celsius (approximate)
                     current = (int(probe.CurrentReading) / 10.0) - 273.15
                     if 'TemperatureProbe' not in temps:
                         temps['TemperatureProbe'] = []
@@ -124,7 +185,7 @@ def get_summary_metrics():
                         'label': probe.Name or 'Probe',
                         'current': round(current, 1),
                         'high': probe.MaxReadable or None,
-                        'critical': probe.MinReadable or None  # Approximate
+                        'critical': probe.MinReadable or None
                     })
             # Try MSAcpi_ThermalZoneTemperature
             for tz in c.MSAcpi_ThermalZoneTemperature():
@@ -138,13 +199,11 @@ def get_summary_metrics():
                         'high': None,
                         'critical': None
                     })
-        except ImportError:
-            pass  # wmi not installed
-        except Exception as e:
-            # Silently fail if WMI query fails (common on some systems)
-            pass
+            pythoncom.CoUninitialize()
+        except:
+            pass  # Silent fail
 
-    return {
+    result = {
         'cpu_percent': cpu_percent,
         'cpu_count': cpu_count,
         'cpu_freq_current': round(cpu_freq_current, 2),
@@ -161,11 +220,18 @@ def get_summary_metrics():
         'boot_time': boot_time.isoformat(),
         'uptime_seconds': int(uptime_seconds),
         'load_avg': load_avg,
-        'processes': processes[:20],
+        'processes': processes,  # Already limited to 20
         'temperatures': temps,
         'os': platform.system(),
         'hostname': platform.node(),
         'machine': platform.machine(),
         'version': platform.version(),
-        'total_cpu_processes': total_cpu_processes  # ← Добавлено
+        'total_cpu_processes': total_cpu_processes
     }
+
+    # Cache the result
+    with _cache_lock:
+        _metrics_cache = result
+        _cache_timestamp = current_time
+
+    return result

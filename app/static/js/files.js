@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `);
         } else {
             // Для других документов показываем сообщение
-            alert('Document preview is not supported for this file type (' + ext + '). You can download the file to view it.');
+            showNotification('Document preview is not supported for this file type (' + ext + '). You can download the file to view it.', 'warning');
         }
     }
 
@@ -284,14 +284,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                     })
                                 }).then(response => {
                                     if(response.ok) {
-                                        alert('File saved successfully!');
+                                        showNotification('File saved successfully!', 'success');
                                     } else {
                                         response.json().then(data => {
-                                            alert('Error saving file: ' + data.error);
+                                            showNotification('Error saving file: ' + data.error, 'error');
                                         });
                                     }
                                 }).catch(error => {
-                                    alert('Network error: ' + error.message);
+                                    showNotification('Network error: ' + error.message, 'error');
                                 });
                             }
                         </script>
@@ -359,11 +359,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 listDirectory(currentPath, false);
             } else {
                 response.json().then(data => {
-                    alert('Error renaming item: ' + data.error);
+                    showNotification('Error renaming item: ' + data.error, 'error');
                 });
             }
         }).catch(error => {
-            alert('Network error: ' + error.message);
+            showNotification('Network error: ' + error.message, 'error');
         });
     }
 
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.error) {
                     console.error('API Error:', data.error);
-                    alert('Error loading directory: ' + data.error);
+                    showNotification('Error loading directory: ' + data.error, 'error');
                     return;
                 }
 
@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if(response.ok) {
                                     listDirectory(currentPath, false);
                                 } else {
-                                    alert('Error deleting item');
+                                    showNotification('Error deleting item', 'error');
                                 }
                             }).catch(error => {
                                 alert('Network error: ' + error.message);
@@ -563,10 +563,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 fileInput.value = '';
                 listDirectory(currentPath, false);
             } else {
-                alert('Error uploading file');
+                showNotification('Error uploading file', 'error');
             }
         }).catch(error => {
-            alert('Network error: ' + error.message);
+            showNotification('Network error: ' + error.message, 'error');
         });
     });
 
@@ -593,10 +593,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     newItemNameInput.value = '';
                     listDirectory(currentPath, false);
                 } else {
-                    alert('Error creating file');
+                    showNotification('Error creating file', 'error');
                 }
             }).catch(error => {
-                alert('Network error: ' + error.message);
+                showNotification('Network error: ' + error.message, 'error');
             });
         } else {
             // Создаем папку
@@ -609,10 +609,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     newItemNameInput.value = '';
                     listDirectory(currentPath, false);
                 } else {
-                    alert('Error creating directory');
+                    showNotification('Error creating directory', 'error');
                 }
             }).catch(error => {
-                alert('Network error: ' + error.message);
+                showNotification('Network error: ' + error.message, 'error');
             });
         }
     });

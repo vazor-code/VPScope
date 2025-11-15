@@ -38,6 +38,9 @@ def emit_file_change_event(path):
 
 def safe_path(base_dir, path):
     """Secure path joining to prevent directory traversal"""
+    # If path is absolute and on an allowed drive, allow it
+    if os.path.isabs(path) and os.name == 'nt' and len(path) >= 3 and path[1] == ':' and path[0].isalpha() and (path[:3] in [d + '\\' for d in get_drives()]):
+        return os.path.normpath(path)
     # Normalize and join
     full_path = os.path.normpath(os.path.join(base_dir, path.lstrip('/')))
     # Check if it's within base_dir
@@ -57,7 +60,7 @@ def list_directory():
     base_dir = os.getcwd()  # Limit to current working directory for security
     try:
         # Decode URL-encoded path
-        path = unquote(path)
+        path = unquote(path).strip()
         # Normalize path
         normalized_path = normalize_path(path)
 
@@ -65,7 +68,7 @@ def list_directory():
         if normalized_path in ('/', '.', ''):
             safe_full_path = base_dir
         # Allow drive letters for browsing (read-only)
-        elif len(normalized_path) == 2 and normalized_path[1] == ':' and normalized_path[0].isalpha() and normalized_path in get_drives():
+        elif normalized_path.endswith(':\\') and len(normalized_path) == 3 and normalized_path[0].isalpha() and normalized_path[:-1] in get_drives():
             safe_full_path = normalized_path
         else:
             safe_full_path = safe_path(base_dir, normalized_path)

@@ -227,5 +227,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     fetchMetrics();
-    setInterval(fetchMetrics, 2000); // Обновлять каждые 2 секунды
+    setInterval(fetchMetrics, 3000); // Обновлять каждые 3 секунды
 });
