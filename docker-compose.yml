@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  vpscope:
+    build: .
+    container_name: vpscope
+    ports:
+      - "8000:8000" # Отображаем порт 8000 контейнера на порт 8000 хоста
+    volumes:
+      # Пример монтирования локальной директории для управления файлами (опционально)
+      # Убедитесь, что путь на хосте существует
+      # - /path/to/your/host/directory:/app/mounted_data
+      # Монтируем локальный .env файл внутрь контейнера (если используется)
+      - ./vpscope.env:/app/.env
+    environment:
+      # Убедитесь, что SECRET_KEY задан в .env файле или здесь
+      - FLASK_ENV=production # Установите в 'development' при разработке
+    restart: unless-stopped # Автоматически перезапускать контейнер, если он остановлен
+    # network_mode: "host" # Альтернатива для портов, если нужен доступ к локальному хосту
