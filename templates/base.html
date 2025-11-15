@@ -14,10 +14,14 @@
             <div class="logo">VPScope</div>
             <ul>
                 <li><a href="/">Home</a></li>
+                {% if current_user.is_authenticated %}
                 <li><a href="/system">System</a></li>
                 <li><a href="/files">Files</a></li>
                 <li><a href="/terminal">Terminal</a></li>
                 <li><a href="/logout">Logout</a></li>
+                {% else %}
+                <li><a href="/login">Login</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

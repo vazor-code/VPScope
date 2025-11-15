@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     navContainer.style.marginBottom = '1rem';
     drivesContainer.parentNode.insertBefore(navContainer, drivesContainer);
 
-    let currentPath = '/';
+    let currentPath = '.';
     let pathHistory = []; // История посещенных директорий
     let currentIndex = -1; // Текущий индекс в истории
     let socket; // Переменная для хранения WebSocket-соединения

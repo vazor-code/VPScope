@@ -1,5 +1,6 @@
 import psutil
 import platform
+import os
 from datetime import datetime
 
 def get_summary_metrics():
@@ -16,19 +17,15 @@ def get_summary_metrics():
     ram_total = ram.total
     ram_percent = ram.percent
 
-    # Disk
-    disk = psutil.disk_usage('/')
-    disk_used = disk.used
-    disk_total = disk.total
-    disk_percent = disk.percent
-
-    # Все диски
+    # Все диски first to find current drive
     disk_parts = psutil.disk_partitions()
     all_disks = []
+    current_drive = os.path.splitdrive(os.getcwd())[0] + '\\'  # e.g., 'D:\\'
+    summary_disk = None
     for part in disk_parts:
         try:
             usage = psutil.disk_usage(part.mountpoint)
-            all_disks.append({
+            disk_info = {
                 'device': part.device,
                 'mountpoint': part.mountpoint,
                 'fstype': part.fstype,
@@ -36,9 +33,27 @@ def get_summary_metrics():
                 'used': usage.used,
                 'free': usage.free,
                 'percent': usage.percent
-            })
+            }
+            all_disks.append(disk_info)
+            # Check if this is the current drive
+            if part.device == current_drive or part.mountpoint == current_drive:
+                summary_disk = disk_info
         except:
             continue
+
+    # Use summary_disk if found, else first disk or fallback
+    if summary_disk:
+        disk_used = summary_disk['used']
+        disk_total = summary_disk['total']
+        disk_percent = summary_disk['percent']
+    elif all_disks:
+        disk_used = all_disks[0]['used']
+        disk_total = all_disks[0]['total']
+        disk_percent = all_disks[0]['percent']
+    else:
+        disk_used = 0
+        disk_total = 0
+        disk_percent = 0
 
     # Network
     net = psutil.net_io_counters()

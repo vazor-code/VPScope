@@ -1,5 +1,6 @@
 import os
 from werkzeug.utils import secure_filename
+import shutil
 
 def list_dir(path='.'):
     entries = []
@@ -22,7 +23,6 @@ def save_upload(file_storage, target_path='.'):
 
 def delete_file(path):
     if os.path.isdir(path):
-        import shutil
         shutil.rmtree(path)
     else:
         os.remove(path)

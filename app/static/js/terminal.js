@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', function() {
         output.innerHTML += '$ Connected to server\n';
     });
 
+    socket.on('connect_error', function(err) {
+        output.innerHTML += 'Connection error: ' + err.message + '\n';
+        output.scrollTop = output.scrollHeight;
+    });
+
+    socket.on('disconnect', function() {
+        output.innerHTML += 'Disconnected from server\n';
+        output.scrollTop = output.scrollHeight;
+    });
+
     socket.on('cmd_output', function(data) {
         if (data.output) output.innerHTML += data.output + '\n';
         if (data.exit !== undefined) output.innerHTML += `[Process finished with code ${data.exit}]\n`;
@@ -22,6 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Фокус на ввод при клике по выводу
+    // Focus on input when clicking on output
     output.addEventListener('click', () => input.focus());
 });

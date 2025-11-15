@@ -1,13 +1,16 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, render_template
+from flask_login import login_required
 from app.utils.system_utils import get_summary_metrics
 
 system_bp = Blueprint('system', __name__)
 
 @system_bp.route('/')
+@login_required
 def index():
-    return "<h1>System Metrics API</h1>"
+    return render_template('system.html')
 
 @system_bp.route('/metrics')
+@login_required
 def metrics():
     metrics_data = get_summary_metrics()
     return jsonify(metrics_data)
